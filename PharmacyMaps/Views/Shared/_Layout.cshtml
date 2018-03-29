@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Rx Stream</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <header class="header">
+        <!-- header overlay wrapper -->
+        <div class="header-overlay">
+            <!-- header container -->
+            <div class="container">
+                <!-- single row -->
+                <div class="row header-Nav">
+                    <!-- left column -->
+                    <div class="col-md-12">
+
+                        <!-- logo -->
+                        <div class="logo text-center">
+                            <img class="img-responsive" src="~/content/images/rxstream-Banner.png" alt="Logo" width="100%">
+                            <table border="0" width="100%">
+                                <tr>
+                                    <td width="200">
+                                        &nbsp;
+                                    </td>
+
+                                    <td width="30">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <br />
+
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - RxStream</p>
+        </footer>
+    </div>
+
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

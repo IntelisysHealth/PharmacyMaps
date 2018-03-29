@@ -1,0 +1,74 @@
+﻿
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsjXnttbPvETsUXTkuj0pZpV-p209qg-8&callback=initMap" type="text/javascript"></script>
+
+<style>
+    #map_canvas img {
+        max-width: none;
+    }
+</style>
+
+<!-- This css is to give a nice big popup "info window" when a marker is clicked on the map -->
+<style>
+    .infoDiv {
+        height: 200px;
+        width: 300px;
+        -webkit-user-select: none;
+        background-color: white;
+    }
+</style>
+<br />
+<!-- This is the div that will contain the Google Map -->
+<div id="map" style="height: 550px;"></div>
+
+<!-- Enclose the Javascript in a "section" so that it is rendered in the correct order after scripts have been loaded etc -->
+@section scripts {
+    <script type="text/javascript">
+    var map;
+    
+    function initMap() {
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "/api/RxStream/Estimate",
+            data: "{}",
+            dataType: "json",
+            success: function (data) {
+                var myOptions = {
+                    center: new google.maps.LatLng(data[0].Latitude, data[0].Longitude),
+                    zoom: 14,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+
+                map = new google.maps.Map(document.getElementById("map"), myOptions);
+
+                var ltlng = [];
+                for (var i = 0; i <= data.length; i++) {
+
+                    ltlng.push(new google.maps.LatLng(data[i].Latitude, data[i].Longitude));
+
+                    marker = new google.maps.Marker({
+                        map: map,
+                        animation: google.maps.Animation.DROP,
+                        title: data[i].Name,
+                        position: ltlng[i],
+                        icon: data[i].Icon
+                    });
+
+
+                    (function (marker, i) {
+                        google.maps.event.addListener(marker, 'click', function () {
+                            infowindow = new google.maps.InfoWindow({ maxWidth: 250 });
+                            infowindow.setContent(data[i].Name);
+                            infowindow.open(map, marker);
+                        });
+
+                    })(marker, i);
+                }
+            },
+            error: function (result) {
+                alert("Error");
+            }
+        });
+    };
+        </script>
+    } 
