@@ -14,12 +14,8 @@ namespace PharmacyMaps.Controllers.Api
 {
     public class RxStreamController : ApiController
     {
-
-        
-        public IHttpActionResult Estimate()
+        private List<EstimateDto> RxStreamEstimate()
         {
-             List<GeoDistanceDto> pharmacyMapPoints = new List<GeoDistanceDto>();
-
             string url = ConfigurationSettings.AppSettings["url"].ToString();
             string tenantId = ConfigurationSettings.AppSettings["tenantId"].ToString();
             string apiKey = ConfigurationSettings.AppSettings["apiKey"].ToString();
@@ -27,7 +23,7 @@ namespace PharmacyMaps.Controllers.Api
             //get the methods you are going to call
             var client = new RestClient(url);
             var request = new RestRequest("Prescription/Estimate", Method.POST);
-            
+
             //Add the keys to the request header, these are requred for ever call
             request.AddHeader("TenantId", tenantId);
             request.AddHeader("ApiKey", apiKey);
@@ -50,23 +46,40 @@ namespace PharmacyMaps.Controllers.Api
                 Ndc = "00378362793",
                 Quantity = 30
             });
-
-
+            
             //Add the Json body
             var json = JsonConvert.SerializeObject(prescriptionDto);
             request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
             request.RequestFormat = DataFormat.Json;
-            
+
 
             //Call RxStream
             var restResponse = client.Execute(request);
-            
+
             //try to make the call and report any errors
+
+            //Deserialize object
+             var responseList = JsonConvert.DeserializeObject<List<EstimateDto>>(restResponse.Content);
+
+            return responseList;
+        }
+
+        public IHttpActionResult ListEstimate()
+        {
+            List<GeoDistanceDto> pharmacyMapPoints = new List<GeoDistanceDto>();
+
+            return Json(new {data = RxStreamEstimate()});
+        }
+
+
+        public IHttpActionResult MapEstimate()
+        {
+             List<GeoDistanceDto> pharmacyMapPoints = new List<GeoDistanceDto>();
+
             try
             {
                 //Deserialize object
-                var responseList = JsonConvert.DeserializeObject<List<EstimateDto>>(restResponse.Content);
-
+                var responseList = RxStreamEstimate();
 
                 //convert this into a google map Dto you might want to add some of your own source data here like address and phone number
                 string lowestCost = string.Empty;
@@ -74,18 +87,17 @@ namespace PharmacyMaps.Controllers.Api
                 {
                     string icon = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
 
-                    if (i == 0 || lowestCost == responseList[i].TotalCost)
-                    {
-                        lowestCost = responseList[i].TotalCost;
+                    if (responseList[i].TotalCost == "6.16" || responseList[i].TotalCost == "5.56")
                         icon = "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
-                    }
-
-                    if (i == responseList.Count - 2)
-                    {
-                        icon = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
-                    }
-                        
                     
+                    if (responseList[i].TotalCost == "57.35")
+                        icon = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+
+                    if (responseList[i].TotalCost == "150.53")
+                        icon = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+
+
+
                     pharmacyMapPoints.Add(new GeoDistanceDto
                     {
                         Id = responseList[i].Npi,
@@ -94,15 +106,12 @@ namespace PharmacyMaps.Controllers.Api
                         Latitude = responseList[i].Latitude,
                         Longitude = responseList[i].Longitude
                     });
-                }
-
-                
+                }   
             }
             catch (Exception e)
             {
-                
+                return Json(e.InnerException);
             }
-            
             return Json(pharmacyMapPoints);
         }
 

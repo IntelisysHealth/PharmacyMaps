@@ -6,6 +6,7 @@ using System.Web;
 namespace PharmacyMaps.Dtos
 {
     /// <summary>
+    /// api/Estimate returns this dto
     /// Initial estimate to display the different total costs by pharmacy
     /// </summary>
     public class EstimateDto

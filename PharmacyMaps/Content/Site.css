@@ -219,3 +219,15 @@ body {
     -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
+
+
+    #map_canvas img {
+     max-width: none;
+ }
+
+    .infoDiv {
+     height: 200px;
+     width: 300px;
+     -webkit-user-select: none;
+     background-color: white;
+ }

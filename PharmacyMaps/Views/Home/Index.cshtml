@@ -1,74 +1,126 @@
-﻿
+﻿@{
+                /**/
+
+                ViewBag.Title = "Pharmacy Search";
+}
+<b>@Html.ActionLink("No modal", "Index", "Home")</b>&nbsp;|&nbsp;@Html.ActionLink("Modal", "Modal", "Home")
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsjXnttbPvETsUXTkuj0pZpV-p209qg-8&callback=initMap" type="text/javascript"></script>
-
-<style>
-    #map_canvas img {
-        max-width: none;
-    }
-</style>
-
-<!-- This css is to give a nice big popup "info window" when a marker is clicked on the map -->
-<style>
-    .infoDiv {
-        height: 200px;
-        width: 300px;
-        -webkit-user-select: none;
-        background-color: white;
-    }
-</style>
-<br />
-<!-- This is the div that will contain the Google Map -->
-<div id="map" style="height: 550px;"></div>
-
-<!-- Enclose the Javascript in a "section" so that it is rendered in the correct order after scripts have been loaded etc -->
+<div class="row">
+    <div class="col-md-5">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Pharmacies</h3>
+            </div>
+            <div class="panel-body">
+                <table Class="table table-bordered table-hover  table-striped " id="pharmacies">
+                    <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>Pharmacy</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div id="map" style="height: 550px;"></div>
+    </div>
+</div>
 @section scripts {
     <script type="text/javascript">
-    var map;
-    
-    function initMap() {
-        $.ajax({
-            type: "POST",
-            contentType: "application/json; charset=utf-8",
-            url: "/api/RxStream/Estimate",
-            data: "{}",
-            dataType: "json",
-            success: function (data) {
-                var myOptions = {
-                    center: new google.maps.LatLng(data[0].Latitude, data[0].Longitude),
-                    zoom: 14,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
-                };
 
-                map = new google.maps.Map(document.getElementById("map"), myOptions);
+        $("#pharmacies")
+            .DataTable({
+                "processing": true,
+                "paging": false,
+                "searching": false,
+                ajax: {
+                    url: "/api/RxStream/ListEstimate",
+                    type: "POST",
+                    data: {},
+                    error: function (ts) {
+                        alert(ts.responseText);
+                    }
+                },
+                columns: [
+                    {
+                        data: "Npi",
+                        render: function (data, type, pharmacy) {
+                            return '<input type=radio id="Npi" name="Npi" value="' + pharmacy.Npi + '"/>';
+                        }
+                    },
+                    { data: "PharmacyName" },
+                    {
+                        data: "TotalCost",
+                        render: function (data, type, pharmacy) {
+                            return '$' + pharmacy.TotalCost;
+                        }
+                    }
+                ]
+            }
+            );
 
-                var ltlng = [];
-                for (var i = 0; i <= data.length; i++) {
 
-                    ltlng.push(new google.maps.LatLng(data[i].Latitude, data[i].Longitude));
+        function SelectPharmacy(npi) {
+            $('input[name=Npi][value=' + npi + ']').prop('checked', true);
+        }
 
-                    marker = new google.maps.Marker({
-                        map: map,
-                        animation: google.maps.Animation.DROP,
-                        title: data[i].Name,
-                        position: ltlng[i],
-                        icon: data[i].Icon
-                    });
+        var map;
+        function initMap() {
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "/api/RxStream/MapEstimate",
+                data: "{}",
+                dataType: "json",
+                success: function (data) {
+                    var myOptions = {
+                        center: new google.maps.LatLng(data[0].Latitude, data[0].Longitude),
+                        zoom: 13,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP
+                    };
 
+                    map = new google.maps.Map(document.getElementById("map"), myOptions);
 
-                    (function (marker, i) {
-                        google.maps.event.addListener(marker, 'click', function () {
-                            infowindow = new google.maps.InfoWindow({ maxWidth: 250 });
-                            infowindow.setContent(data[i].Name);
-                            infowindow.open(map, marker);
+                    var ltlng = [];
+                    for (var i = 0; i <= data.length; i++) {
+
+                        ltlng.push(new google.maps.LatLng(data[i].Latitude, data[i].Longitude));
+
+                        marker = new google.maps.Marker({
+                            map: map,
+                            animation: google.maps.Animation.DROP,
+                            title: data[i].Name,
+                            position: ltlng[i],
+                            icon: data[i].Icon
                         });
 
-                    })(marker, i);
+
+                        (function (marker, i) {
+                            google.maps.event.addListener(marker, 'click', function () {
+                                //infowindow = new google.maps.InfoWindow({ maxWidth: 250 });
+                                //infowindow.setContent(data[i].Name);
+                                //infowindow.open(map, marker);
+                                SelectPharmacy(data[i].Id);
+                            });
+
+                        })(marker, i);
+                    }
+                },
+                error: function (result) {
+                    alert("Error");
                 }
-            },
-            error: function (result) {
-                alert("Error");
-            }
+            });
+        };
+
+        $(document).ready(function () {
+            initMap();
         });
-    };
-        </script>
-    } 
+
+        
+
+    </script>
+} 
